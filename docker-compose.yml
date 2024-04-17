@@ -1,0 +1,70 @@
+version: '3'
+
+services:
+
+  api-service:
+    build:
+      context: ./
+      dockerfile: api.Dockerfile
+    command: ['npm', 'run', 'dev']
+    ports:
+      - 9092:9092
+    env_file:
+      - .env
+    volumes:
+      - ./build:/app/build:delegated
+    networks:
+      - sample-network
+  
+  api-service-watch:
+    build:
+      context: ./
+      dockerfile: api.Dockerfile
+    command: ['npm', 'run', 'build:watch']
+    volumes:
+      - ./src/:/app/src
+      - ./build/:/app/build
+    logging:
+      options:
+        max-size: 10m
+    networks:
+      - sample-network
+
+  keycloak-db:
+    image: postgres:latest
+    ports:
+      - 5432:5432
+    logging:
+      options:
+        max-size: 10m
+    volumes:
+      - './keycloak_postgres:/var/lib/postgresql/data'
+    environment:
+      POSTGRES_PASSWORD: admin
+      POSTGRES_USER: admin
+    networks:
+      - sample-network
+
+  keycloak-server:
+    build:
+      context: ./
+      dockerfile: keycloak.Dockerfile
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    volumes:
+      - './keycloak_app:/opt/keycloak/data/import'
+    depends_on:
+      - keycloak-db
+    ports:
+      - 9090:8080
+    networks:
+      - sample-network
+
+networks:
+  sample-network:
+    driver: bridge
+
+volumes:
+  keycloak_app:
+  keycloak_postgres:

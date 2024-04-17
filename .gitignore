@@ -1,0 +1,13 @@
+# OSX
+#
+.DS_Store
+
+#build
+build/
+.env
+
+# node.js
+#
+node_modules/
+keycloak_app/
+keycloak_postgres/
